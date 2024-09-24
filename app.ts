@@ -1,10 +1,11 @@
-import express, { Request, Response, NextFunction } from 'express';
-import 'express-async-errors';
-import cors from 'cors';
 import axios from 'axios';
+import cors from 'cors';
 import dotenv from 'dotenv';
+import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
+import puppeteer from 'puppeteer';
 import { setupSwagger } from './swagger.config';
+import 'express-async-errors';
 
 //#region App Setup
 const app = express();
@@ -22,7 +23,31 @@ setupSwagger(app, BASE_URL);
 //#endregion App Setup
 
 //#region Code here
-console.log('Hello world');
+
+// Define a route for web automation
+app.get('/automate', async (req: Request, res: Response) => {
+  try {
+    // Launch Puppeteer browser instance
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+
+    // Navigate to a webpage
+    await page.goto('https://example.com');
+
+    // Perform web automation tasks (e.g., scrape content)
+    const pageTitle = await page.title();
+
+    // Close the browser
+    await browser.close();
+
+    // Respond with automation result
+    res.json({ title: pageTitle });
+  } catch (error) {
+    console.error('Automation Error:', error);
+    res.status(500).send('Error occurred while automating');
+  }
+});
+
 //#endregion
 
 //#region Server Setup
@@ -92,7 +117,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.log(`${'\x1b[31m'}`); // start color red
   console.log(`${err.message}`);
   console.log(`${'\x1b][0m]'}`); //stop color
-  
+
   return res
     .status(500)
     .send({ success: false, status: 500, message: err.message });
