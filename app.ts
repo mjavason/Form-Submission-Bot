@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import puppeteer from 'puppeteer';
 import { setupSwagger } from './swagger.config';
 import 'express-async-errors';
+import { basicWebsiteCheck, fillFormMultipleTimes } from './functions';
 
 //#region App Setup
 const app = express();
@@ -26,26 +27,26 @@ setupSwagger(app, BASE_URL);
 
 // Define a route for web automation
 app.get('/automate', async (req: Request, res: Response) => {
-  try {
-    // Launch Puppeteer browser instance
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
+  const url = 'http://localhost:5500/frontend/index.html';
+  // basicWebsiteCheck(res);
 
-    // Navigate to a webpage
-    await page.goto('https://example.com');
+  await fillFormMultipleTimes(url, 30);
+  return res.send('Automation task completed');
+});
 
-    // Perform web automation tasks (e.g., scrape content)
-    const pageTitle = await page.title();
+// Handle POST request from the form
+app.post('/login', (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-    // Close the browser
-    await browser.close();
-
-    // Respond with automation result
-    res.json({ title: pageTitle });
-  } catch (error) {
-    console.error('Automation Error:', error);
-    res.status(500).send('Error occurred while automating');
+  if (!email || !password) {
+    return res.status(400).send('Email and password are required.');
   }
+
+  // Simulate form handling (you can add logic for authentication here)
+  console.log(`Email: ${email}, Password: ${password}`);
+
+  // Send a success response
+  res.send(`Logged in with Email: ${email}`);
 });
 
 //#endregion
